@@ -1,13 +1,24 @@
 #!/usr/bin/env bash
-# Script to config domain zone to point to load balancer
+# This script displays the DNS record type and IP address of specified subdomains
+
+# Function to get subdomain info
+get_subdomain_info() {
+    local domain=$1
+    local subdomain=$2
+    
+    # Use dig to get full output, then awk to extract record type and destination
+    # shellcheck disable=SC2086
+    dig ${subdomain}.${domain} | awk '/ANSWER SECTION:/ {getline; print "The subdomain '"${subdomain}"' is a " $4 " record and points to " $5}'
+}
 
 domain=$1
-if [ "$#" -eq 2 ]; then
-   sub=$2
+subdomain=$2
+
+# If no subdomain provided, use default list
+if [ -z "$subdomain" ]; then
+    for sd in www lb-01 web-01 web-02; do
+        get_subdomain_info "$domain" "$sd"
+    done
 else
-	sub=("www" "lb-01" "web-01" "web-02")
+    get_subdomain_info "$domain" "$subdomain"
 fi
-for subdomain in "${sub[@]}"; do
-    echo -n "The subdomain $subdomain"
-    dig "$subdomain.$domain" | grep -A1 'ANSWER SECTION:' | tail -n -1 | awk '{ print " is a " $4 " record and points to " $5}'
-done

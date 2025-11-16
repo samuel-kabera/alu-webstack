@@ -1,1 +1,1 @@
-Read Me file for the Https SSL directory
+script to configure subdomain
